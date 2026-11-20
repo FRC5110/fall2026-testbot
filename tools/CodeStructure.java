@@ -102,7 +102,7 @@ public class CodeStructure {
         String method = f.group(2);
         if (method.equals("getAutonomousCommand")) continue;
         sb.append("| ").append(owner).append(".").append(method).append("() | Factory | `").append(s.rel).append("` | ")
-            .append(inSubsystem && f.group(1) == null ? owner : "See method").append(" | No | — |\n");
+            .append(inSubsystem && f.group(1) == null ? owner : "See method").append(" | No | \u2014 |\n");
         commandRows++;
       }
     }
@@ -142,7 +142,7 @@ public class CodeStructure {
           if (steps.isEmpty() || !steps.get(steps.size() - 1).equals(n)) steps.add(n);
         }
         sb.append("| ").append(owner).append(".").append(method).append("() | `").append(s.rel).append("` | ")
-            .append(cell(String.join(" → ", steps))).append(" |\n");
+            .append(cell(String.join(" \u2192 ", steps))).append(" |\n");
         autoRows++;
       }
     }
@@ -269,13 +269,13 @@ public class CodeStructure {
   }
 
   static String cell(String s) {
-    return s.isEmpty() ? "—" : "`" + s.replace("|", "\\|").replace("`", "'") + "`";
+    return s.isEmpty() ? "\u2014" : "`" + s.replace("|", "\\|").replace("`", "'") + "`";
   }
 
   static String docLink(Path docsRoot, String folder, String name, boolean critical) {
     if (Files.exists(docsRoot.resolve(folder).resolve(name + ".md"))) {
       return "[" + folder + "/" + name + ".md](" + folder + "/" + name + ".md)";
     }
-    return critical ? "**MISSING**" : "—";
+    return critical ? "**MISSING**" : "\u2014";
   }
 }
