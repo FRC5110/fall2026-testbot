@@ -104,4 +104,10 @@ wpi.java.configureTestTasks(test)
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
+    // List each deprecation warning with its file and line (team procedures, D7)
+    options.compilerArgs.add '-Xlint:deprecation'
 }
+
+// Keep docs/code-structure.md current on every build (team procedures, Procedure 8B).
+// Re-add this line after each yearly WPILib project import.
+apply from: 'codestructure.gradle'

@@ -1,0 +1,49 @@
+# Builds robot code on pushes to main and on pull requests to main.
+# Team procedures: D7 (build check), 8B (code map check), 9A (agent instructions check).
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    # WPILib's container with the JDK, C++ compiler, and roboRIO toolchain
+    container: wpilib/roborio-cross-ubuntu:2025-22.04
+    steps:
+    - uses: actions/checkout@v6
+    - name: Add repository to git safe directories
+      run: git config --global --add safe.directory $GITHUB_WORKSPACE
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Compile and run tests on robot code
+      shell: bash
+      run: ./gradlew build 2>&1 | tee build.log
+    - name: Check docs/code-structure.md is current
+      shell: bash
+      run: |
+        git diff --exit-code -- docs/code-structure.md || { echo "::error::docs/code-structure.md is out of date. Build locally and commit it."; exit 1; }
+        if grep -q "MISSING" docs/code-structure.md; then echo "::warning::A critical subsystem or command has no doc (Procedure 8C)."; fi
+    - name: Check agent instructions match
+      shell: bash
+      run: diff -q AGENTS.md .github/copilot-instructions.md || { echo "::error::Copy AGENTS.md to .github/copilot-instructions.md"; exit 1; }
+    - name: List warnings
+      if: always()
+      shell: bash
+      run: |
+        grep -i "warning:" build.log > warnings.txt || true
+        echo "### Build warnings: $(wc -l < warnings.txt)" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat warnings.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+    - name: Upload build log and warnings
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        path: |
+          build.log
+          warnings.txt
