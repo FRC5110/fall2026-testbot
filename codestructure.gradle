@@ -1,0 +1,22 @@
+// Keeps docs/code-structure.md up to date (team procedures, Procedure 8B).
+// Applied from the last line of build.gradle. Kept in its own file so the yearly
+// WPILib project import, which regenerates build.gradle, only loses that one line.
+//
+// Runs tools/CodeStructure.java with the same Java that runs Gradle (WPILib's JDK),
+// so nothing else needs to be installed.
+
+import org.gradle.internal.os.OperatingSystem
+
+def javaExe = new File(System.getProperty('java.home'), 'bin/java' + (OperatingSystem.current().isWindows() ? '.exe' : '')).absolutePath
+
+tasks.register('generateCodeStructure', Exec) {
+    group = 'documentation'
+    description = 'Regenerates the tables in docs/code-structure.md from the robot code.'
+    workingDir = projectDir
+    commandLine javaExe, 'tools/CodeStructure.java', 'src/main/java/frc/robot', 'docs/code-structure.md'
+}
+
+// Every build, including WPILib: Build Robot Code, refreshes the file.
+tasks.named('build') {
+    dependsOn 'generateCodeStructure'
+}
